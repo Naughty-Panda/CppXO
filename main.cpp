@@ -8,8 +8,6 @@
 #include "GameData.h"
 
 
-
-
 int main() {
 
 	//std::unique_ptr<int[]> arr = std::make_unique<int[]>(10);
@@ -17,6 +15,15 @@ int main() {
 
 
 	auto GI = CreateGameInstance();
+
+	GI->GameData.Grid[0][0] = ECell::O;
+
+	for (size_t n = 0; n < GRID_SIZE_Y; n++) {
+		for (size_t m = 0; m < GRID_SIZE_X; m++) {
+			std::cout << (char)GI->GameData.Grid[n][m] << " ";
+		}
+		std::cout << std::endl;
+	}
 
 
 
