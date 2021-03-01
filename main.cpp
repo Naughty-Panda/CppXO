@@ -14,16 +14,9 @@ int main() {
 	//std::unique_ptr<TFrame> frame = std::make_unique<TFrame>();
 
 
-	auto GI = CreateGameInstance();
-
+	auto GI = CreateGameInstance(3, 3);
 	GI->GameData.Grid[0][0] = ECell::O;
-
-	for (size_t n = 0; n < GRID_SIZE_Y; n++) {
-		for (size_t m = 0; m < GRID_SIZE_X; m++) {
-			std::cout << (char)GI->GameData.Grid[n][m] << " ";
-		}
-		std::cout << std::endl;
-	}
+	GI->GameData.PrintGrid();
 
 
 
