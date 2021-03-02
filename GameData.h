@@ -1,7 +1,8 @@
 #pragma once
 
-//constexpr auto GRID_SIZE_X = 3;
-//constexpr auto GRID_SIZE_Y = 3;
+//////////////////////////////////////////////////////////////////////////////
+//	Structs & Enums
+//////////////////////////////////////////////////////////////////////////////
 
 enum class ECell : char {
 
@@ -16,12 +17,12 @@ enum class EGameState {
 
 struct TGameData {
 
-	size_t gSizeX{ 0 };
-	size_t gSizeY{ 0 };
+	size_t gSizeX{ 3 };
+	size_t gSizeY{ 3 };
 	ECell** Grid{};
 	EGameState State{};
 
-	TGameData(size_t x = 0, size_t y = 0);
+	TGameData(size_t x = 3, size_t y = 3);
 	~TGameData();
 
 	void PrintGrid();
@@ -31,10 +32,17 @@ struct TGameInstance {
 
 	TGameData GameData{};
 
-	TGameInstance(size_t x = 0, size_t y = 0) : GameData{ x,y } {};
+	TGameInstance(size_t x = 3, size_t y = 3) : GameData{ x,y } {};
 };
 
 
 void InitGameData(TGameData&);
 
 std::unique_ptr<TGameInstance> CreateGameInstance(size_t x, size_t y);
+
+//////////////////////////////////////////////////////////////////////////////
+//	User input
+//////////////////////////////////////////////////////////////////////////////
+
+std::pair<size_t, size_t> GetGridSize();
+size_t GetUserSize(const char axis);

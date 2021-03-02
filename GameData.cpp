@@ -73,3 +73,35 @@ void TGameData::PrintGrid() {
 		std::cout << std::endl;
 	}
 }
+
+//////////////////////////////////////////////////////////////////////////////
+//	User input
+//////////////////////////////////////////////////////////////////////////////
+
+std::pair<size_t, size_t> GetGridSize() {
+
+	std::pair<size_t, size_t> PGridSize{ 0,0 };
+
+	PGridSize.first = GetUserSize('X');
+	PGridSize.second = GetUserSize('Y');
+
+	return PGridSize;
+}
+
+size_t GetUserSize(const char axis) {
+
+	size_t tmp(0);
+
+	while (tmp < 3 || tmp > 5) {
+		std::cout << "Please enter size " << axis << " (3 - 5):";
+		std::cin >> tmp;
+		if (std::cin.fail()) {
+			std::cout << "\nThat's not gonna work!\n";
+			std::cin.clear();
+			std::cin.ignore(32767, '\n');
+		}
+	}
+
+	return tmp;
+}
+
