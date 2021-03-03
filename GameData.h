@@ -57,5 +57,6 @@ std::unique_ptr<TGameInstance> CreateGameInstance(size_t x, size_t y);
 //////////////////////////////////////////////////////////////////////////////
 
 std::pair<size_t, size_t> GetGridSize();
+void SetWinCount(TGameData&);
 size_t GetUserInput(const std::string&, const std::string&, const size_t, const size_t);
 ECell GetPlayerIcon();

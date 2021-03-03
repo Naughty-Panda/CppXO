@@ -18,8 +18,7 @@ int main() {
 	auto GI = CreateGameInstance(PGridSize.first, PGridSize.second);
 
 	// Set the number of marks to win (3 - 5)
-	size_t nWinCount(0);
-	GI->GameData.nWinCount = nWinCount;
+	SetWinCount(GI->GameData);
 
 	// Assign Icons
 	TEntity* Player = &GI->GameData.Player;

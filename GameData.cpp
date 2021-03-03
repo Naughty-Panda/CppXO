@@ -119,6 +119,10 @@ void TGameInstance::StartGame() {
 
 		GameData.ActivePlayer == Player ? GameData.PlayerMove() : GameData.AIMove();
 		GameData.nMoveCount++;
+
+		if (GameData.nMoveCount > (GameData.nWinCount - 1) * 2) {
+			// Check for victory
+		}
 	}
 }
 
@@ -135,6 +139,13 @@ std::pair<size_t, size_t> GetGridSize() {
 	PGridSize.second = GetUserInput("\tEnter size Y (3 - 5):", sErrMsg, 3, 5);
 
 	return PGridSize;
+}
+
+void SetWinCount(TGameData& gamedata) {
+
+	size_t nMin = gamedata.nGridSizeX < gamedata.nGridSizeY ? gamedata.nGridSizeX : gamedata.nGridSizeY;
+	// No need to ask user if one of grid's sizes is 3
+	gamedata.nWinCount = nMin == 3 ? nMin : GetUserInput("Enter number of marks to win:", "Please try again!", 3, nMin);
 }
 
 size_t GetUserInput(const std::string& inMsg, const std::string& errMsg, const size_t min, const size_t max) {
