@@ -15,21 +15,22 @@ enum class EGameState {
 	GAME_STARTED, STATE
 };
 
-struct TPlayer {
+struct TEntity {
 
 	ECell Icon{};
-	int token : 1;
 };
 
 struct TGameData {
 
-	size_t gSizeX{ 3 };
-	size_t gSizeY{ 3 };
+	size_t nGridSizeX{ 3 };
+	size_t nGridSizeY{ 3 };
 	ECell** Grid{};
+	size_t nWinCount{ 3 };
+	size_t nMoveCount{ 0 };
 	EGameState State{};
-	TPlayer Player{};
-	TPlayer AI{};
-	TPlayer* ActivePlayer{nullptr};
+	TEntity Player{};
+	TEntity AI{};
+	TEntity* ActivePlayer{nullptr};
 
 	TGameData(size_t x = 3, size_t y = 3);
 	~TGameData();
@@ -56,5 +57,5 @@ std::unique_ptr<TGameInstance> CreateGameInstance(size_t x, size_t y);
 //////////////////////////////////////////////////////////////////////////////
 
 std::pair<size_t, size_t> GetGridSize();
-size_t GetUserInput(const std::string&, const size_t, const size_t);
+size_t GetUserInput(const std::string&, const std::string&, const size_t, const size_t);
 ECell GetPlayerIcon();

@@ -19,18 +19,18 @@ std::unique_ptr<TGameInstance> CreateGameInstance(size_t x, size_t y) {
 //	GameData Constructors
 //////////////////////////////////////////////////////////////////////////////
 
-TGameData::TGameData(size_t x, size_t y) : gSizeX(x), gSizeY(y) {
+TGameData::TGameData(size_t x, size_t y) : nGridSizeX(x), nGridSizeY(y) {
 
 	std::cout << "GameData constructor called.\n";
 
-	Grid = new (std::nothrow) ECell * [gSizeY];
+	Grid = new (std::nothrow) ECell * [nGridSizeY];
 	if (!Grid) {
 		std::cerr << "Can't allocate grid's outer array.\n" << std::endl;
 		return;
 	}
 
-	for (size_t y = 0; y < gSizeY; y++) {
-		Grid[y] = new (std::nothrow) ECell[gSizeX];
+	for (size_t y = 0; y < nGridSizeY; y++) {
+		Grid[y] = new (std::nothrow) ECell[nGridSizeX];
 		if (!Grid[y]) {
 			std::cerr << "Can't allocate grid's inner array.\n" << std::endl;
 			return;
@@ -42,7 +42,7 @@ TGameData::~TGameData() {
 	
 	std::cout << "GameData destructor called.\n";
 
-	for (size_t y = 0; y < this->gSizeY; y++) {
+	for (size_t y = 0; y < this->nGridSizeY; y++) {
 		delete[] this->Grid[y];
 	}
 
@@ -57,8 +57,8 @@ void InitGameData(TGameData& gd) {
 
 	if (!gd.Grid) return;
 
-	for (size_t y = 0; y < gd.gSizeY; y++) {
-		for (size_t x = 0; x < gd.gSizeX; x++) {
+	for (size_t y = 0; y < gd.nGridSizeY; y++) {
+		for (size_t x = 0; x < gd.nGridSizeX; x++) {
 			gd.Grid[y][x] = ECell::Empty;
 		}
 	}
@@ -66,8 +66,8 @@ void InitGameData(TGameData& gd) {
 
 void TGameData::PrintGrid() {
 
-	for (size_t y = 0; y < this->gSizeY; y++) {
-		for (size_t x = 0; x < this->gSizeX; x++) {
+	for (size_t y = 0; y < this->nGridSizeY; y++) {
+		for (size_t x = 0; x < this->nGridSizeX; x++) {
 			std::cout << static_cast<char> (this->Grid[y][x]) << " ";
 		}
 		std::cout << std::endl;
@@ -77,14 +77,14 @@ void TGameData::PrintGrid() {
 void TGameData::PlayerMove() {
 
 	std::cout << "Your move!\n";
-	std::pair<size_t, size_t> PInput{ 0, 0 };
+	size_t nPosX(0), nPosY(0);
 
 	do {
-		PInput.first = GetUserInput("Please enter position X:", 1, gSizeX) - 1;
-		PInput.second = GetUserInput("Please enter position Y:", 1, gSizeY) - 1;
-	} while (Grid[PInput.second][PInput.first] != ECell::Empty);
+		nPosX = GetUserInput("\tEnter position X:", "Out of grid! Please try again!", 1, nGridSizeX) - 1;
+		nPosY = GetUserInput("\tEnter position Y:", "Out of grid! Please try again!", 1, nGridSizeY) - 1;
+	} while (Grid[nPosY][nPosX] != ECell::Empty);
 
-	Grid[PInput.second][PInput.first] = Player.Icon;
+	Grid[nPosY][nPosX] = Player.Icon;
 
 	PrintGrid();
 
@@ -106,8 +106,8 @@ void TGameData::AIMove() {
 
 void TGameInstance::StartGame() {
 
-	TPlayer* Player = &GameData.Player;
-	TPlayer* AI = &GameData.AI;
+	TEntity* Player = &GameData.Player;
+	TEntity* AI = &GameData.AI;
 
 
 	for (int i = 0; i < 10; i++) {
@@ -118,6 +118,7 @@ void TGameInstance::StartGame() {
 		}
 
 		GameData.ActivePlayer == Player ? GameData.PlayerMove() : GameData.AIMove();
+		GameData.nMoveCount++;
 	}
 }
 
@@ -128,33 +129,44 @@ void TGameInstance::StartGame() {
 std::pair<size_t, size_t> GetGridSize() {
 
 	std::pair<size_t, size_t> PGridSize{ 0, 0 };
+	const std::string sErrMsg{ "Size should be (3 - 5)! Please try again!" };
 
-	PGridSize.first = GetUserInput("Please enter size X (3 - 5):", 3, 5);
-	PGridSize.second = GetUserInput("Please enter size Y (3 - 5):", 3, 5);
+	PGridSize.first = GetUserInput("\tEnter size X (3 - 5):", sErrMsg, 3, 5);
+	PGridSize.second = GetUserInput("\tEnter size Y (3 - 5):", sErrMsg, 3, 5);
 
 	return PGridSize;
 }
 
-size_t GetUserInput(const std::string& inStr, const size_t min, const size_t max) {
+size_t GetUserInput(const std::string& inMsg, const std::string& errMsg, const size_t min, const size_t max) {
 
-	size_t tmp(0);
+	size_t nInput(0), nFailCount(0);
 
-	while (tmp < min || tmp > max) {
-		std::cout << inStr;
-		std::cin >> tmp;
+	while (nInput < min || nInput > max) {
+
+		if (nFailCount) {
+
+			std::cout << errMsg << std::endl;
+		}
+
+		std::cout << inMsg;
+		std::cin >> nInput;
 		if (std::cin.fail()) {
 			std::cout << "\nThat's not gonna work!\n";
 			std::cin.clear();
 			std::cin.ignore(32767, '\n');
-			tmp = 0;
+			nInput = 0;
 		}
+		nFailCount++;
 	}
 
-	return tmp;
+	return nInput;
 }
 
 ECell GetPlayerIcon() {
 
-	size_t icon = GetUserInput("Please choose your icon:\n\t(1 to play as X)\n\t(2 to play as O):", 1, 2);
-	return icon == 1 ? ECell::X : ECell::O;
+	const std::string sMsg{ "\tChoose your icon:\n\t(1 to play as X)\n\t(2 to play as O):" };
+	const std::string sErrMsg{ "No such icon, please try again!" };
+
+	size_t nIcon = GetUserInput(sMsg, sErrMsg, 1, 2);
+	return nIcon == 1 ? ECell::X : ECell::O;
 }

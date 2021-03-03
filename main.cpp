@@ -13,13 +13,17 @@ int main() {
 	//std::unique_ptr<int[]> arr = std::make_unique<int[]>(10);
 	//std::unique_ptr<TFrame> frame = std::make_unique<TFrame>();
 
-	// Grid creation
+	// Grid creation (3 - 5)
 	std::pair<size_t, size_t> PGridSize = GetGridSize();
 	auto GI = CreateGameInstance(PGridSize.first, PGridSize.second);
 
+	// Set the number of marks to win (3 - 5)
+	size_t nWinCount(0);
+	GI->GameData.nWinCount = nWinCount;
+
 	// Assign Icons
-	TPlayer* Player = &GI->GameData.Player;
-	TPlayer* AI = &GI->GameData.AI;
+	TEntity* Player = &GI->GameData.Player;
+	TEntity* AI = &GI->GameData.AI;
 
 	Player->Icon = GetPlayerIcon();
 	AI->Icon = Player->Icon == ECell::X ? ECell::O : ECell::X;
@@ -30,11 +34,6 @@ int main() {
 	
 	// Starting game!
 	GI->StartGame();
-
-
-
-	GI->GameData.Grid[0][0] = ECell::O;
-	GI->GameData.PrintGrid();
 
 
 
