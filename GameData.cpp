@@ -10,7 +10,7 @@ std::unique_ptr<TGameInstance> CreateGameInstance(size_t x, size_t y) {
 	auto GI = std::make_unique<TGameInstance>(x, y);
 
 	InitGameData(GI->GameData);
-	GI->GameData.State = EGameState::STATE;
+	GI->GameData.State = EGameState::IN_PROGRESS;
 
 	return GI;
 }
@@ -21,7 +21,7 @@ std::unique_ptr<TGameInstance> CreateGameInstance(size_t x, size_t y) {
 
 TGameData::TGameData(size_t x, size_t y) : nGridSizeX(x), nGridSizeY(y) {
 
-	std::cout << "GameData constructor called.\n";
+	//std::cout << "GameData constructor called.\n";
 
 	Grid = new (std::nothrow) ECell * [nGridSizeY];
 	if (!Grid) {
@@ -40,7 +40,7 @@ TGameData::TGameData(size_t x, size_t y) : nGridSizeX(x), nGridSizeY(y) {
 
 TGameData::~TGameData() {
 	
-	std::cout << "GameData destructor called.\n";
+	//std::cout << "GameData destructor called.\n";
 
 	for (size_t y = 0; y < this->nGridSizeY; y++) {
 		delete[] this->Grid[y];
@@ -66,17 +66,26 @@ void InitGameData(TGameData& gd) {
 
 void TGameData::PrintGrid() {
 
+	// Header
+	std::cout << "    ";
+	for (size_t x = 0; x < nGridSizeX; x++) {
+		std::cout << x + 1 << " ";
+	}
+	std::cout << std::endl;
+
+	// Grid
 	for (size_t y = 0; y < this->nGridSizeY; y++) {
+		std::cout << y + 1 << " | ";
 		for (size_t x = 0; x < this->nGridSizeX; x++) {
 			std::cout << static_cast<char> (this->Grid[y][x]) << " ";
 		}
-		std::cout << std::endl;
+		std::cout << "|"<< std::endl;
 	}
 }
 
 void TGameData::PlayerMove() {
 
-	std::cout << "Your move!\n";
+	std::cout << "\tYour move!\n";
 	size_t nPosX(0), nPosY(0);
 
 	do {
@@ -86,8 +95,6 @@ void TGameData::PlayerMove() {
 
 	Grid[nPosY][nPosX] = Player.Icon;
 
-	PrintGrid();
-
 	// Give control to AI
 	ActivePlayer = &AI;
 }
@@ -96,9 +103,64 @@ void TGameData::AIMove() {
 
 	std::cout << "AI moves!\n";
 
+	// Center
+	for (size_t y = 0; y < nGridSizeY; y++) {
+		for (size_t x = 0; x < nGridSizeX; x++) {
+			if (Grid[y][x] == ECell::Empty) {
+				Grid[y][x] = AI.Icon;
+				ActivePlayer = &Player;
+				return;
+			}
+		}
+	}
+
 	// Give control to player
 	ActivePlayer = &Player;
 }
+
+EGameState TGameData::CheckState() {
+
+	size_t nCount(0);
+	size_t nDiag = nGridSizeX < nGridSizeY ? nGridSizeX - 1 : nGridSizeY - 1;
+
+	// Check rows
+	for (size_t y = 0; y < nGridSizeY; y++) {
+		for (size_t x = 0; x < nGridSizeX - 1; x++) {
+			(Grid[y][x] != ECell::Empty) && (Grid[y][x] == Grid[y][x + 1]) ? nCount++ : nCount = 0;
+			if (nCount == nWinStreak - 1) return EGameState::WIN;
+		}
+	}
+
+	// Check columns
+	for (size_t x = 0; x < nGridSizeX; x++) {
+		for (size_t y = 0; y < nGridSizeY - 1; y++) {
+			(Grid[y][x] != ECell::Empty) && (Grid[y][x] == Grid[y + 1][x]) ? nCount++ : nCount = 0;
+			if (nCount == nWinStreak - 1) return EGameState::WIN;
+		}
+	}
+
+	// Check main diagonal
+	for (size_t d = 0; d < nDiag; d++) {
+		(Grid[d][d] != ECell::Empty) && (Grid[d][d] == Grid[d + 1][d + 1]) ? nCount++ : nCount = 0;
+		if (nCount == nWinStreak - 1) return EGameState::WIN;
+	}
+
+	// Check reverse diagonal
+	for (size_t d = 0; d < nDiag; d++) {
+		(Grid[d][nDiag - d] != ECell::Empty) && (Grid[d][nDiag - d] == Grid[d + 1][nDiag - d - 1]) ? nCount++ : nCount = 0;
+		if (nCount == nWinStreak - 1) return EGameState::WIN;
+	}
+
+	// Check empty cells	
+	for (size_t y = 0; y < nGridSizeY; y++) {
+		for (size_t x = 0; x < nGridSizeX; x++) {
+			if (Grid[y][x] == ECell::Empty) return EGameState::IN_PROGRESS;
+		}
+	}
+
+	return EGameState::DRAW;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////
 //	GameInstance Functions
@@ -110,20 +172,29 @@ void TGameInstance::StartGame() {
 	TEntity* AI = &GameData.AI;
 
 
-	for (int i = 0; i < 10; i++) {
+	while (GameData.State == EGameState::IN_PROGRESS) {
 
 		if (!GameData.ActivePlayer) {
 			std::cerr << "No active player!\n";
 			return;
 		}
 
+		ClearScreen();
+		GameData.PrintGrid();
+
 		GameData.ActivePlayer == Player ? GameData.PlayerMove() : GameData.AIMove();
 		GameData.nMoveCount++;
 
-		if (GameData.nMoveCount > (GameData.nWinCount - 1) * 2) {
+		if (GameData.nMoveCount > (GameData.nWinStreak - 1) * 2) {
 			// Check for victory
+			if (GameData.CheckState() == EGameState::WIN) std::cout << "WIN\n"; else std::cout << "NO WIN\n";
+			GameData.State = GameData.CheckState();
 		}
+
 	}
+
+		ClearScreen();
+		GameData.PrintGrid();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -135,17 +206,19 @@ std::pair<size_t, size_t> GetGridSize() {
 	std::pair<size_t, size_t> PGridSize{ 0, 0 };
 	const std::string sErrMsg{ "Size should be (3 - 5)! Please try again!" };
 
-	PGridSize.first = GetUserInput("\tEnter size X (3 - 5):", sErrMsg, 3, 5);
-	PGridSize.second = GetUserInput("\tEnter size Y (3 - 5):", sErrMsg, 3, 5);
+	PGridSize.second = PGridSize.first = GetUserInput("\tEnter grid size (3 - 5):", sErrMsg, 3, 5);
+
+	//PGridSize.first = GetUserInput("\tEnter size X (3 - 5):", sErrMsg, 3, 5);
+	//PGridSize.second = GetUserInput("\tEnter size Y (3 - 5):", sErrMsg, 3, 5);
 
 	return PGridSize;
 }
 
-void SetWinCount(TGameData& gamedata) {
+void SetWinStreak(TGameData& gamedata) {
 
 	size_t nMin = gamedata.nGridSizeX < gamedata.nGridSizeY ? gamedata.nGridSizeX : gamedata.nGridSizeY;
 	// No need to ask user if one of grid's sizes is 3
-	gamedata.nWinCount = nMin == 3 ? nMin : GetUserInput("Enter number of marks to win:", "Please try again!", 3, nMin);
+	gamedata.nWinStreak = nMin == 3 ? nMin : GetUserInput("Enter win streak (3 - 5):", "Please try again!", 3, nMin);
 }
 
 size_t GetUserInput(const std::string& inMsg, const std::string& errMsg, const size_t min, const size_t max) {
@@ -180,4 +253,14 @@ ECell GetPlayerIcon() {
 
 	size_t nIcon = GetUserInput(sMsg, sErrMsg, 1, 2);
 	return nIcon == 1 ? ECell::X : ECell::O;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//	Utility
+//////////////////////////////////////////////////////////////////////////////
+
+void ClearScreen() {
+
+	// CSI[2J clears screen, CSI[H moves the cursor to top-left corner
+	std::cout << "\x1B[2J\x1B[H";
 }
