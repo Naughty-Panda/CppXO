@@ -81,6 +81,7 @@ void TGameData::PrintGrid() {
 		}
 		std::cout << "|"<< std::endl;
 	}
+	std::cout << std::endl;
 }
 
 void TGameData::PlayerMove() {
@@ -118,7 +119,7 @@ void TGameData::AIMove() {
 	ActivePlayer = &Player;
 }
 
-EGameState TGameData::CheckState() {
+std::pair<ECell, EGameState> TGameData::CheckState() {
 
 	size_t nCount(0);
 	size_t nDiag = nGridSizeX < nGridSizeY ? nGridSizeX - 1 : nGridSizeY - 1;
@@ -127,7 +128,7 @@ EGameState TGameData::CheckState() {
 	for (size_t y = 0; y < nGridSizeY; y++) {
 		for (size_t x = 0; x < nGridSizeX - 1; x++) {
 			(Grid[y][x] != ECell::Empty) && (Grid[y][x] == Grid[y][x + 1]) ? nCount++ : nCount = 0;
-			if (nCount == nWinStreak - 1) return EGameState::WIN;
+			if (nCount == nWinStreak - 1) return { Grid[y][x], EGameState::WIN };
 		}
 	}
 
@@ -135,30 +136,30 @@ EGameState TGameData::CheckState() {
 	for (size_t x = 0; x < nGridSizeX; x++) {
 		for (size_t y = 0; y < nGridSizeY - 1; y++) {
 			(Grid[y][x] != ECell::Empty) && (Grid[y][x] == Grid[y + 1][x]) ? nCount++ : nCount = 0;
-			if (nCount == nWinStreak - 1) return EGameState::WIN;
+			if (nCount == nWinStreak - 1) return { Grid[y][x], EGameState::WIN };
 		}
 	}
 
 	// Check main diagonal
 	for (size_t d = 0; d < nDiag; d++) {
 		(Grid[d][d] != ECell::Empty) && (Grid[d][d] == Grid[d + 1][d + 1]) ? nCount++ : nCount = 0;
-		if (nCount == nWinStreak - 1) return EGameState::WIN;
+		if (nCount == nWinStreak - 1) return { Grid[d][d], EGameState::WIN };
 	}
 
 	// Check reverse diagonal
 	for (size_t d = 0; d < nDiag; d++) {
 		(Grid[d][nDiag - d] != ECell::Empty) && (Grid[d][nDiag - d] == Grid[d + 1][nDiag - d - 1]) ? nCount++ : nCount = 0;
-		if (nCount == nWinStreak - 1) return EGameState::WIN;
+		if (nCount == nWinStreak - 1) return { Grid[d][nDiag - d], EGameState::WIN };
 	}
 
 	// Check empty cells	
 	for (size_t y = 0; y < nGridSizeY; y++) {
 		for (size_t x = 0; x < nGridSizeX; x++) {
-			if (Grid[y][x] == ECell::Empty) return EGameState::IN_PROGRESS;
+			if (Grid[y][x] == ECell::Empty) return { ECell::Empty, EGameState::IN_PROGRESS };
 		}
 	}
 
-	return EGameState::DRAW;
+	return { ECell::Empty, EGameState::DRAW };
 }
 
 
@@ -170,6 +171,9 @@ void TGameInstance::StartGame() {
 
 	TEntity* Player = &GameData.Player;
 	TEntity* AI = &GameData.AI;
+	std::pair<ECell, EGameState> CheckResult{};
+	ECell Winner{ ECell::Empty };
+	EGameState NewState{ EGameState::IN_PROGRESS };
 
 
 	while (GameData.State == EGameState::IN_PROGRESS) {
@@ -186,15 +190,20 @@ void TGameInstance::StartGame() {
 		GameData.nMoveCount++;
 
 		if (GameData.nMoveCount > (GameData.nWinStreak - 1) * 2) {
-			// Check for victory
-			if (GameData.CheckState() == EGameState::WIN) std::cout << "WIN\n"; else std::cout << "NO WIN\n";
-			GameData.State = GameData.CheckState();
+
+			// Update status if needed
+			CheckResult = GameData.CheckState();
+			GameData.State = NewState = CheckResult.second;
 		}
-
 	}
+	
+	ClearScreen();
+	GameData.PrintGrid();
 
-		ClearScreen();
-		GameData.PrintGrid();
+	Winner = CheckResult.first;
+	if (Winner != ECell::Empty) {
+		std::cout << (Winner == Player->Icon ? "\tCongratulations!\n\tVictory is yours!\n" : "\tAI wins!\n");
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -44,7 +44,7 @@ struct TGameData {
 	void PrintGrid();
 	void PlayerMove();
 	void AIMove();
-	EGameState CheckState();
+	std::pair<ECell, EGameState> CheckState();
 };
 
 struct TGameInstance {
