@@ -104,7 +104,19 @@ void TGameData::AIMove() {
 
 	std::cout << "AI moves!\n";
 
-	// Center
+	// Win or block next posotoin in the row
+	if (WinBlockRow(1, 2)) return;
+
+	// Win or block in between the row
+	if (WinBlockRow(2, 1)) return;
+
+	// Win or block next position in column
+	if (WinBlockColumn(1, 2)) return;
+
+	// Win or block in between the column
+	if (WinBlockColumn(2, 1)) return;
+
+	// TEMP
 	for (size_t y = 0; y < nGridSizeY; y++) {
 		for (size_t x = 0; x < nGridSizeX; x++) {
 			if (Grid[y][x] == ECell::Empty) {
@@ -117,6 +129,42 @@ void TGameData::AIMove() {
 
 	// Give control to player
 	ActivePlayer = &Player;
+}
+
+bool TGameData::WinBlockRow(size_t mid, size_t next) {
+
+	for (size_t y = 0; y < nGridSizeY; y++) {
+		for (size_t x = 0; x < nGridSizeX - 2; x++) {
+			if ((Grid[y][x] != ECell::Empty) && (Grid[y][x] == Grid[y][x + mid])) {
+				// Win or block
+				if (Grid[y][x + next] == ECell::Empty) {
+					Grid[y][x + next] = AI.Icon;
+					ActivePlayer = &Player;
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+bool TGameData::WinBlockColumn(size_t mid, size_t next) {
+
+	for (size_t x = 0; x < nGridSizeX; x++) {
+		for (size_t y = 0; y < nGridSizeY - 2; y++) {
+			if ((Grid[y][x] != ECell::Empty) && (Grid[y][x] == Grid[y + next][x])) {
+				// Win or block
+				if (Grid[y + mid][x] == ECell::Empty) {
+					Grid[y + mid][x] = AI.Icon;
+					ActivePlayer = &Player;
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
 }
 
 std::pair<ECell, EGameState> TGameData::CheckState() {
@@ -175,7 +223,6 @@ void TGameInstance::StartGame() {
 	ECell Winner{ ECell::Empty };
 	EGameState NewState{ EGameState::IN_PROGRESS };
 
-
 	while (GameData.State == EGameState::IN_PROGRESS) {
 
 		if (!GameData.ActivePlayer) {
@@ -202,7 +249,13 @@ void TGameInstance::StartGame() {
 
 	Winner = CheckResult.first;
 	if (Winner != ECell::Empty) {
+
 		std::cout << (Winner == Player->Icon ? "\tCongratulations!\n\tVictory is yours!\n" : "\tAI wins!\n");
+	}
+
+	if (NewState == EGameState::DRAW) {
+
+		std::cout << "\tIt's a draw!\n";
 	}
 }
 

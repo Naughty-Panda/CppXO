@@ -44,6 +44,8 @@ struct TGameData {
 	void PrintGrid();
 	void PlayerMove();
 	void AIMove();
+	bool WinBlockRow(size_t, size_t);
+	bool WinBlockColumn(size_t, size_t);
 	std::pair<ECell, EGameState> CheckState();
 };
 
