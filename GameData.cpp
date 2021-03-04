@@ -104,18 +104,18 @@ void TGameData::AIMove() {
 
 	std::cout << "AI moves!\n";
 
-	// Win or block next posotoin in the row
+	// Win or block next or previous posotoin in the row
 	if (WinBlockRow(1, 2)) return;
 
 	// Win or block in between the row
 	if (WinBlockRow(2, 1)) return;
 
-	// Win or block next position in column
+	// Win or block next or previous position in column
 	if (WinBlockColumn(1, 2)) return;
 
 	// Win or block in between the column
 	if (WinBlockColumn(2, 1)) return;
-
+	
 	// TEMP
 	for (size_t y = 0; y < nGridSizeY; y++) {
 		for (size_t x = 0; x < nGridSizeX; x++) {
@@ -126,7 +126,7 @@ void TGameData::AIMove() {
 			}
 		}
 	}
-
+	
 	// Give control to player
 	ActivePlayer = &Player;
 }
@@ -146,6 +146,20 @@ bool TGameData::WinBlockRow(size_t mid, size_t next) {
 		}
 	}
 
+	// Check previous cell in row
+	for (size_t y = 0; y < nGridSizeY; y++) {
+		for (size_t x = 2; x < nGridSizeX; x++) {
+			if ((Grid[y][x] != ECell::Empty) && (Grid[y][x] == Grid[y][x - 1])) {
+				// Win or block
+				if (Grid[y][x - 2] == ECell::Empty) {
+					Grid[y][x - 2] = AI.Icon;
+					ActivePlayer = &Player;
+					return true;
+				}
+			}
+		}
+	}
+
 	return false;
 }
 
@@ -157,6 +171,20 @@ bool TGameData::WinBlockColumn(size_t mid, size_t next) {
 				// Win or block
 				if (Grid[y + mid][x] == ECell::Empty) {
 					Grid[y + mid][x] = AI.Icon;
+					ActivePlayer = &Player;
+					return true;
+				}
+			}
+		}
+	}
+
+	// Check previous cell in column
+	for (size_t x = 0; x < nGridSizeX; x++) {
+		for (size_t y = 2; y < nGridSizeY; y++) {
+			if ((Grid[y][x] != ECell::Empty) && (Grid[y][x] == Grid[y - 1][x])) {
+				// Win or block
+				if (Grid[y - 2][x] == ECell::Empty) {
+					Grid[y - 2][x] = AI.Icon;
 					ActivePlayer = &Player;
 					return true;
 				}
